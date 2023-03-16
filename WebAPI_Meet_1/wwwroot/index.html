@@ -12,21 +12,21 @@
             <input type="hidden" name="id" value="0" />
             <div class="mb-3">
                 <label class="form-label" for="manufacturer">Manufacturer:</label>
-                <input type="text" name="manufacturer" id="manufacturer" class="form-control"/>
+                <input type="text" name="manufacturer" id="manufacturer" class="form-control" />
             </div>
             <div class="mb-3">
                 <label class="form-label" for="model">Model:</label>
-                <input type="text" name="model" id="model"  class="form-control"/>
+                <input type="text" name="model" id="model" class="form-control" />
             </div>
             <div class="mb-3">
                 <label class="form-label" for="price">Price:</label>
-                <input type="number" name="price" id="price"  class="form-control"/>
+                <input type="number" name="price" id="price" class="form-control" />
             </div>
             <div class="mb-3">
                 <label class="form-label" for="year">Year:</label>
-                <input type="number" name="year" id="year"  class="form-control"/>
+                <input type="number" name="year" id="year" class="form-control" />
             </div>
-            <input  type="submit" value="Save" class="btn btn-outline-success"/>
+            <button id="submit" type="submit" class="btn btn-outline-success">Save</button>
         </form>
         <div class="row">
             <table class="table table-striped table-hover">
@@ -48,7 +48,31 @@
 
     <script src="dist/bootstrap/js/bootstrap.js"></script>
     <script type="text/javascript">
-        document.addEventListener("DOMContentLoaded", loadCarDataAsync);
+
+        document.addEventListener("DOMContentLoaded",  () => {
+            const form = document.forms["carForm"];
+            form.addEventListener("submit", e => {
+
+                e.preventDefault();
+                let car = {};
+
+                car.manufacturer = form.elements["manufacturer"].value;
+                car.model = form.elements["model"].value;
+                car.price = parseFloat(form.elements["price"].value);
+                car.year = parseInt(form.elements["year"].value);
+                let id = parseInt(form.elements["id"].value);
+
+                if (id == 0) {
+                    createCar(car);
+                }
+                else {
+                    car.id = id;
+                    editCar(car);
+                }
+            });
+            loadCarDataAsync();
+        });
+
         async function getCar(id) {
             let resp = await fetch(`api/cars/${id}`, {
                 method: "GET",
@@ -66,6 +90,7 @@
                 form.elements["year"].value = carData.year;
             }
         }
+
         async function loadCarDataAsync() {
             let resp = await fetch("api/cars", {
                 method: "GET",
@@ -82,6 +107,7 @@
                 });
             }
         }
+
         function row(car) {
             let tr = document.createElement("tr");
             tr.setAttribute("data-rowid", car.id);
@@ -126,6 +152,29 @@
             tr.append(linksTd);
 
             return tr;
+        }
+
+        async function createCar(car) {
+            let resp = await fetch("api/cars", {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(car)
+            });
+            if (resp.ok === true) {
+                let respCar = await resp.json();
+                let tbody = document.querySelector("tbody");
+                tbody.append(row(respCar));
+                reset();
+            }
+        }
+
+        function reset() {
+            let form = document.forms["carForm"];
+            form.reset();
+            form.elements["id"] = 0;
         }
     </script>
 </body>
